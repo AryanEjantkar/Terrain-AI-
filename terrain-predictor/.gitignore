@@ -1,0 +1,41 @@
+# Virtual Environments
+venv/
+venv312/
+.venv/
+env/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Large Files & Models
+*.h5
+*.tflite
+*.onnx
+
+# Frontend Dependencies
+node_modules/
+dist/
+build/
+
+# IDE & OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Environment Secrets
+.env
+.env.local
+
+# Installers & Binaries
+*.exe
+*.msi
+nvm-setup.exe
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

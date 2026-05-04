@@ -1,0 +1,15 @@
+# Virtual Environments
+terrain-predictor/venv/
+terrain-predictor/venv312/
+
+# Large Files & Models
+eurosat_model.h5
+*.h5
+
+# Installers
+nvm-setup.exe
+*.exe
+
+# Frontend
+terrain-predictor/frontend/node_modules/
+terrain-predictor/frontend/dist/
