@@ -17,6 +17,7 @@ An AI-powered platform that analyzes real-time satellite imagery to classify ter
 - [Installation](#-installation--usage)
 - [Future Enhancements](#-future-enhancements)
 - [LLM Prompts Used](#-llm-prompts-used-to-create-this-project)
+- [Deployment link](#-Deployment-link)
 - [Author](#-author)
 
 ---
@@ -127,6 +128,12 @@ This project was developed using Large Language Models (LLMs) to optimize system
 
 ### 4. Animation Logic
 > "Implement smooth state transitions for terrain prediction bars using Framer Motion, including a hover-sensitive history list for recently scanned locations."
+
+---
+## Deployment link
+
+https://huggingface.co/spaces/AryanYeager/Terrain-AI
+
 
 ---
 
