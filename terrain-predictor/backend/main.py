@@ -1,13 +1,13 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import tensorflow as tf
 import numpy as np
 from PIL import Image
 import io
 import os
 import requests
-
-app = FastAPI(title="Terrain Prediction API")
 
 # Persistent session for faster imagery fetching
 session = requests.Session()
@@ -21,10 +21,10 @@ app.add_middleware(
 )
 
 # Load the model
-MODEL_PATH = r"c:\aimaps\eurosat_model.h5"
+MODEL_PATH = "eurosat_model.h5"
 if not os.path.exists(MODEL_PATH):
-    # Try local path if absolute fails
-    MODEL_PATH = "eurosat_model.h5"
+    # Try absolute path as fallback (local dev)
+    MODEL_PATH = r"c:\aimaps\eurosat_model.h5"
 
 try:
     model = tf.keras.models.load_model(MODEL_PATH)
@@ -114,6 +114,19 @@ def process_image(contents):
         "all_scores": {CLASS_NAMES[i]: float(scores[i]) for i in range(len(CLASS_NAMES))}
     }
 
+# Serve Frontend Static Files
+# We check if the frontend/dist folder exists (built by Docker)
+FRONTEND_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
+if os.path.exists(FRONTEND_PATH):
+    app.mount("/", StaticFiles(directory=FRONTEND_PATH, html=True), name="frontend")
+    
+    # Optional: Catch-all for React Routing
+    @app.exception_handler(404)
+    async def custom_404_handler(request, __):
+        return FileResponse(os.path.join(FRONTEND_PATH, "index.html"))
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Hugging Face Spaces uses 7860 by default
+    port = int(os.environ.get("PORT", 7860))
+    uvicorn.run(app, host="0.0.0.0", port=port)
