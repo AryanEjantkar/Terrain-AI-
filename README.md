@@ -106,28 +106,6 @@ npm run dev
 
 ---
 
-## 🤖 LLM Prompts Used to Create This Project
-This project was developed using Large Language Models (LLMs) to optimize system design, UI aesthetics, and inference logic.
-
----
-
-### 1. Project Ideation
-> "Create a high-performance terrain classification system that uses real-time satellite imagery and displays it on an interactive dashboard with a premium glassmorphic design."
-
----
-
-### 2. UI/UX Design
-> "Design a modern, left-aligned sidebar for a map-based application. Include glassmorphic tabs for Analysis, About, and Contact, with a pulsing scan effect in the center of the screen."
-
----
-
-### 3. Backend Optimization
-> "Write a FastAPI endpoint that takes GPS coordinates, fetches a satellite tile from ArcGIS, and runs it through a TensorFlow model. Optimize for speed using persistent requests sessions."
-
----
-
-### 4. Animation Logic
-> "Implement smooth state transitions for terrain prediction bars using Framer Motion, including a hover-sensitive history list for recently scanned locations."
 
 ---
 ## Deployment link
