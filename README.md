@@ -5,7 +5,28 @@
 ![React](https://img.shields.io/badge/React-19-blue?logo=react)
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange?logo=tensorflow)
 
-An AI-powered platform that analyzes real-time satellite imagery to classify terrain types across the globe. Using high-resolution imagery and Deep Learning, it provides instant insights into land cover and urban development.
+## 🌍 About Terrain-AI
+
+**Terrain-AI** is an AI-powered geospatial analysis platform that helps users understand and analyze terrain using satellite imagery and machine learning. The project combines modern AI techniques with an intuitive web interface to provide meaningful terrain insights for environmental monitoring, land assessment, and decision-making.
+
+The platform processes terrain data to identify geographical features, classify land characteristics, and generate visual insights that are easy to interpret. Designed with scalability and usability in mind, Terrain-AI demonstrates how artificial intelligence can simplify complex geospatial analysis for researchers, students, developers, and organizations.
+
+### ✨ Key Highlights
+
+* 🤖 AI-driven terrain analysis and prediction
+* 🛰️ Satellite imagery and geospatial data processing
+* 📊 Interactive visualization of terrain insights
+* ⚡ Fast and responsive user interface
+* 📈 Data-driven decision support for terrain evaluation
+* 🔍 Automated feature extraction and classification
+* 🌱 Potential applications in agriculture, disaster management, urban planning, environmental monitoring, and infrastructure development
+
+### 🎯 Project Goal
+
+The goal of Terrain-AI is to make terrain intelligence more accessible by combining machine learning with geospatial technologies. Instead of manually interpreting large amounts of terrain data, users can leverage AI to obtain faster, more accurate, and actionable insights.
+
+This project showcases the practical integration of AI, data visualization, and modern web technologies to solve real-world geospatial challenges while maintaining an intuitive and user-friendly experience.
+
 
 ---
 
