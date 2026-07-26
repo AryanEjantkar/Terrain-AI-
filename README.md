@@ -1,18 +1,32 @@
----
-title: Terrain AI
-emoji: 🌍
-colorFrom: indigo
-colorTo: blue
-sdk: docker
-pinned: false
----
+
 
 # Terrain AI - Real-time Satellite Imagery Classifier
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python)
 ![React](https://img.shields.io/badge/React-19-blue?logo=react)
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange?logo=tensorflow)
 
-An AI-powered platform that analyzes real-time satellite imagery to classify terrain types across the globe. Using high-resolution imagery and Deep Learning, it provides instant insights into land cover and urban development.
+## 🌍 About Terrain-AI
+
+**Terrain-AI** is an AI-powered geospatial analysis platform that helps users understand and analyze terrain using satellite imagery and machine learning. The project combines modern AI techniques with an intuitive web interface to provide meaningful terrain insights for environmental monitoring, land assessment, and decision-making.
+
+The platform processes terrain data to identify geographical features, classify land characteristics, and generate visual insights that are easy to interpret. Designed with scalability and usability in mind, Terrain-AI demonstrates how artificial intelligence can simplify complex geospatial analysis for researchers, students, developers, and organizations.
+
+### ✨ Key Highlights
+
+* 🤖 AI-driven terrain analysis and prediction
+* 🛰️ Satellite imagery and geospatial data processing
+* 📊 Interactive visualization of terrain insights
+* ⚡ Fast and responsive user interface
+* 📈 Data-driven decision support for terrain evaluation
+* 🔍 Automated feature extraction and classification
+* 🌱 Potential applications in agriculture, disaster management, urban planning, environmental monitoring, and infrastructure development
+
+### 🎯 Project Goal
+
+The goal of Terrain-AI is to make terrain intelligence more accessible by combining machine learning with geospatial technologies. Instead of manually interpreting large amounts of terrain data, users can leverage AI to obtain faster, more accurate, and actionable insights.
+
+This project showcases the practical integration of AI, data visualization, and modern web technologies to solve real-world geospatial challenges while maintaining an intuitive and user-friendly experience.
+
 
 ---
 
@@ -24,6 +38,7 @@ An AI-powered platform that analyzes real-time satellite imagery to classify ter
 - [Installation](#-installation--usage)
 - [Future Enhancements](#-future-enhancements)
 - [LLM Prompts Used](#-llm-prompts-used-to-create-this-project)
+- [Deployment link](#-Deployment-link)
 - [Author](#-author)
 
 ---
@@ -38,7 +53,7 @@ An AI-powered platform that analyzes real-time satellite imagery to classify ter
 ---
 
 ## 🏗️ System Architecture
-
+> The system integrates a Leaflet-based frontend with a FastAPI backend. The backend fetches satellite tiles from ArcGIS/ESRI servers and processes them through a pre-trained EuroSAT model for sub-100ms inference.
 ```mermaid
 graph TD
     subgraph "Frontend (React + Vite)"
@@ -60,10 +75,7 @@ graph TD
         I -->|JSON Response| D
     end
 ```
-
-![System Architecture](/archi.png)
-
-> The system integrates a Leaflet-based frontend with a FastAPI backend. The backend fetches satellite tiles from ArcGIS/ESRI servers and processes them through a pre-trained EuroSAT model for sub-100ms inference.
+![System Architecture](/archi65.png)
 
 ---
 
@@ -115,28 +127,12 @@ npm run dev
 
 ---
 
-## 🤖 LLM Prompts Used to Create This Project
-This project was developed using Large Language Models (LLMs) to optimize system design, UI aesthetics, and inference logic.
 
 ---
+## Deployment link
 
-### 1. Project Ideation
-> "Create a high-performance terrain classification system that uses real-time satellite imagery and displays it on an interactive dashboard with a premium glassmorphic design."
+https://huggingface.co/spaces/AryanYeager/Terrain-AI
 
----
-
-### 2. UI/UX Design
-> "Design a modern, left-aligned sidebar for a map-based application. Include glassmorphic tabs for Analysis, About, and Contact, with a pulsing scan effect in the center of the screen."
-
----
-
-### 3. Backend Optimization
-> "Write a FastAPI endpoint that takes GPS coordinates, fetches a satellite tile from ArcGIS, and runs it through a TensorFlow model. Optimize for speed using persistent requests sessions."
-
----
-
-### 4. Animation Logic
-> "Implement smooth state transitions for terrain prediction bars using Framer Motion, including a hover-sensitive history list for recently scanned locations."
 
 ---
 
