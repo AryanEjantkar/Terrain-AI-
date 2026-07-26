@@ -9,6 +9,8 @@ import io
 import os
 import requests
 
+app = FastAPI(title="Terrain Prediction API")
+
 # Persistent session for faster imagery fetching
 session = requests.Session()
 
@@ -20,16 +22,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load the model
-MODEL_PATH = "eurosat_model.h5"
-if not os.path.exists(MODEL_PATH):
-    # Try absolute path as fallback (local dev)
-    MODEL_PATH = r"c:\aimaps\eurosat_model.h5"
+# Load the model (Fixed path for Cloud)
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "eurosat_model.h5")
 
 try:
     model = tf.keras.models.load_model(MODEL_PATH)
     print(f"Model loaded successfully from {MODEL_PATH}")
-    model.summary()
 except Exception as e:
     print(f"Error loading model: {e}")
     model = None
@@ -39,7 +37,7 @@ CLASS_NAMES = [
     "Pasture", "PermanentCrop", "Residential", "River", "SeaLake"
 ]
 
-@app.get("/")
+@app.get("/api/status") # Moved to /api/status so the website can show up!
 async def root():
     return {"status": "online", "model_loaded": model is not None}
 
