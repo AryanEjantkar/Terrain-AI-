@@ -1,0 +1,37 @@
+2026-07-27T04:19:31.8422410Z State: Starting, Action: EstablishingSiteNetworks, LastError: ImagePullUnauthorizedFailure, LastErrorTimestamp: 07/27/2026 03:58:02, LastErrorDetails: Failed to pull image: terrainregistry4702.azurecr.io/terrain-ai:latest. Image pull failed with forbidden or unauthorized. Check registry credentials., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 07/27/2026 03:59:03, DetailsLevel: WARN
+2026-07-27T04:19:33.6315747Z State: Starting, Action: StartingSiteContainers, LastError: ImagePullUnauthorizedFailure, LastErrorTimestamp: 07/27/2026 03:58:02, LastErrorDetails: Failed to pull image: terrainregistry4702.azurecr.io/terrain-ai:latest. Image pull failed with forbidden or unauthorized. Check registry credentials., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 07/27/2026 03:59:03, DetailsLevel: WARN
+2026-07-27T04:19:33.6325338Z Container start method called.
+2026-07-27T04:19:33.6326539Z State: Starting, Action: PullingImage, LastError: ImagePullUnauthorizedFailure, LastErrorTimestamp: 07/27/2026 03:58:02, LastErrorDetails: Failed to pull image: terrainregistry4702.azurecr.io/terrain-ai:latest. Image pull failed with forbidden or unauthorized. Check registry credentials., Details: Pulling image terrainregistry4702.azurecr.io/terrain-ai:latest for terrain-ai-web-4702., DetailsLevel: INFO
+2026-07-27T04:19:33.6408051Z Establishing network.
+2026-07-27T04:19:33.6413660Z Pulling image: terrainregistry4702.azurecr.io/terrain-ai:latest.
+2026-07-27T04:21:40.3559999Z Image terrainregistry4702.azurecr.io/terrain-ai:latest is pulled from registry terrainregistry4702.azurecr.io
+2026-07-27T04:21:40.3661830Z Container is starting.
+2026-07-27T04:21:40.3747564Z State: Starting, Action: MountingVolumes, LastError: ImagePullUnauthorizedFailure, LastErrorTimestamp: 07/27/2026 03:58:02, LastErrorDetails: Failed to pull image: terrainregistry4702.azurecr.io/terrain-ai:latest. Image pull failed with forbidden or unauthorized. Check registry credentials., Details: Mounting volumes for terrain-ai-web-4702., DetailsLevel: INFO
+2026-07-27T04:21:40.3749450Z Establishing user namespace if not established already.
+2026-07-27T04:21:40.3749934Z Establishing network if not established already.
+2026-07-27T04:21:40.3750548Z Mounting volumes.
+2026-07-27T04:21:40.3857891Z Nested mountpoint volatile/logs
+2026-07-27T04:21:40.4231618Z Nested mountpoint 
+2026-07-27T04:21:40.5075783Z Nested mountpoint 
+2026-07-27T04:21:40.5962067Z State: Starting, Action: CreatingContainer, LastError: ImagePullUnauthorizedFailure, LastErrorTimestamp: 07/27/2026 03:58:02, LastErrorDetails: Failed to pull image: terrainregistry4702.azurecr.io/terrain-ai:latest. Image pull failed with forbidden or unauthorized. Check registry credentials., Details: Finished pulling container image and mounting volumes for terrain-ai-web-4702. Allocatinng the rest of the container resources to finish container creation., DetailsLevel: INFO
+2026-07-27T04:21:40.5966183Z Creating container.
+2026-07-27T04:21:40.5980099Z Creating pipes for streaming container io.
+2026-07-27T04:21:40.6964911Z Creating stdout named pipe at /podr/container/pipe/ae95123984ab_terrain-ai-web-4702/stdout_e1d0fe0ead2d4210a77f191084d8e460.
+2026-07-27T04:21:40.6971805Z Successfully created stdout named pipe at: /podr/container/pipe/ae95123984ab_terrain-ai-web-4702/stdout_e1d0fe0ead2d4210a77f191084d8e460.
+2026-07-27T04:21:40.6972513Z Opening named pipe /podr/container/pipe/ae95123984ab_terrain-ai-web-4702/stdout_e1d0fe0ead2d4210a77f191084d8e460 for reading in non-blocking mode.
+2026-07-27T04:21:40.6973074Z Successfully opened named pipe: /podr/container/pipe/ae95123984ab_terrain-ai-web-4702/stdout_e1d0fe0ead2d4210a77f191084d8e460.
+2026-07-27T04:21:40.6973494Z Successfully removed non-blocking flag from /podr/container/pipe/ae95123984ab_terrain-ai-web-4702/stdout_e1d0fe0ead2d4210a77f191084d8e460.
+2026-07-27T04:21:40.6976631Z Creating stderr named pipe at /podr/container/pipe/ae95123984ab_terrain-ai-web-4702/stderr_cb0dea7ace2d41bba6de9b53b0a62be4.
+2026-07-27T04:21:40.6978561Z Successfully created stderr named pipe at: /podr/container/pipe/ae95123984ab_terrain-ai-web-4702/stderr_cb0dea7ace2d41bba6de9b53b0a62be4.
+2026-07-27T04:21:40.6979059Z Opening named pipe /podr/container/pipe/ae95123984ab_terrain-ai-web-4702/stderr_cb0dea7ace2d41bba6de9b53b0a62be4 for reading in non-blocking mode.
+2026-07-27T04:21:40.6979578Z Successfully opened named pipe: /podr/container/pipe/ae95123984ab_terrain-ai-web-4702/stderr_cb0dea7ace2d41bba6de9b53b0a62be4.
+2026-07-27T04:21:40.6979995Z Successfully removed non-blocking flag from /podr/container/pipe/ae95123984ab_terrain-ai-web-4702/stderr_cb0dea7ace2d41bba6de9b53b0a62be4.
+2026-07-27T04:21:40.6980956Z Creating container with image: terrainregistry4702.azurecr.io/terrain-ai:latest from registry: terrainregistry4702.azurecr.io and fully qualified image name: terrainregistry4702.azurecr.io/terrain-ai:latest
+2026-07-27T04:21:41.8947615Z Starting container: ae95123984ab_terrain-ai-web-4702.
+2026-07-27T04:21:42.6120736Z Starting watchers and probes.
+2026-07-27T04:21:42.6403049Z Starting metrics collection.
+2026-07-27T04:21:42.6411009Z Container is running.
+2026-07-27T04:21:42.6411755Z State: Starting, Action: CreatingContainer, LastError: ImagePullUnauthorizedFailure, LastErrorTimestamp: 07/27/2026 03:58:02, LastErrorDetails: Failed to pull image: terrainregistry4702.azurecr.io/terrain-ai:latest. Image pull failed with forbidden or unauthorized. Check registry credentials., Details: Container terrain-ai-web-4702 successfully created and is running., DetailsLevel: INFO
+2026-07-27T04:21:42.8549927Z Container start method finished after 129222 ms.
+2026-07-27T04:21:42.8551861Z State: Starting, Action: InitiatingSiteWarmUpProbe, LastError: ImagePullUnauthorizedFailure, LastErrorTimestamp: 07/27/2026 03:58:02, LastErrorDetails: Failed to pull image: terrainregistry4702.azurecr.io/terrain-ai:latest. Image pull failed with forbidden or unauthorized. Check registry credentials., Details: Container terrain-ai-web-4702 successfully created and is running., DetailsLevel: INFO
+2026-07-27T04:21:42.8552361Z State: Starting, Action: WaitingForSiteWarmUpProbeSuccess, LastError: ImagePullUnauthorizedFailure, LastErrorTimestamp: 07/27/2026 03:58:02, LastErrorDetails: Failed to pull image: terrainregistry4702.azurecr.io/terrain-ai:latest. Image pull failed with forbidden or unauthorized. Check registry credentials., Details: Pinging warmup path to ensure container is ready to receive requests., DetailsLevel: INFO

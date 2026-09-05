@@ -1,0 +1,6 @@
+2026-07-27T04:21:51.3159315Z WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+2026-07-27T04:21:51.3213875Z I0000 00:00:1785126111.315739       1 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-07-27T04:21:53.6854492Z I0000 00:00:1785126113.684913       1 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+2026-07-27T04:21:53.6857236Z To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-07-27T04:22:36.2379418Z WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+2026-07-27T04:22:36.2387142Z I0000 00:00:1785126156.237752       1 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
