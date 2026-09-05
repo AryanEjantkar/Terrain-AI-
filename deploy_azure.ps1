@@ -85,9 +85,9 @@ az webapp create --name $WEB_APP_NAME --resource-group $RG_NAME --plan $PLAN_NAM
 Write-Host "Configuring Web App container registry credentials..." -ForegroundColor Cyan
 az webapp config container set --name $WEB_APP_NAME --resource-group $RG_NAME --docker-custom-image-name "$ACR_NAME.azurecr.io/terrain-ai:latest" --docker-registry-server-url "https://$ACR_NAME.azurecr.io" --docker-registry-server-user $acrUser --docker-registry-server-password $acrPassword
 
-# 13. Configure port mapping settings (WEBSITES_PORT=7860)
-Write-Host "Configuring port routing (WEBSITES_PORT=7860)..." -ForegroundColor Cyan
-az webapp config appsettings set --name $WEB_APP_NAME --resource-group $RG_NAME --settings WEBSITES_PORT=7860
+# 13. Configure port mapping & container registry settings in appsettings
+Write-Host "Configuring app settings (WEBSITES_PORT=7860 & ACR Auth)..." -ForegroundColor Cyan
+az webapp config appsettings set --name $WEB_APP_NAME --resource-group $RG_NAME --settings DOCKER_REGISTRY_SERVER_URL="https://$ACR_NAME.azurecr.io" DOCKER_REGISTRY_SERVER_USERNAME=$acrUser DOCKER_REGISTRY_SERVER_PASSWORD=$acrPassword WEBSITES_PORT=7860
 
 # 14. Deployment complete!
 $webAppUrl = "https://$WEB_APP_NAME.azurewebsites.net"
