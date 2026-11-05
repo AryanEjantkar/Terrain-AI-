@@ -183,7 +183,7 @@ flowchart TD
 | **Algorithms** | Graham Scan (Convex Hull) + Centroid & Fair Distance Optimization |
 | **Backend** | Python 3.11 (FastAPI + Uvicorn) |
 | **AI/ML** | TensorFlow + EuroSAT CNN Model |
-| **Deployment**| Hugging Face Spaces (Docker) |
+| **Deployment**| Hugging Face Spaces (Docker) & Azure|
 
 ---
 
