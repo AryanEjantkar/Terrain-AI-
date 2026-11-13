@@ -445,10 +445,10 @@ function App() {
               attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
             />
           ) : (
-            /* 2D Vector Street Map for Connect Feature (CartoDB Voyager) */
+            /* 2D Street Map for Connect Feature (Esri World Street Map - 100% Free, No API Key, Clean Street View) */
             <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-              attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              url="https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
+              attribution='&copy; <a href="https://www.esri.com/">Esri</a> &mdash; Street Map'
             />
           )}
 
