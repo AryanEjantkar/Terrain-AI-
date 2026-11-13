@@ -3,6 +3,7 @@ import { calculateHaversineDistance, formatDistance } from './geoUtils.js';
 /**
  * Calculates travel distances for all group members to each candidate place and ranks candidates
  * to determine the Best Meeting Spot (minimizing aggregate and maximum travel burden).
+ * Prioritizes places located inside the group's polygon boundary before outside spots.
  * 
  * @param {Array<Object>} candidatePlaces 
  * @param {Array<{id: string, name: string, lat: number, lng: number}>} people 
@@ -44,8 +45,14 @@ export function rankMeetingSpots(candidatePlaces, people) {
     };
   });
 
-  // Sort candidates by score ascending (lowest score = best meeting spot)
-  scoredCandidates.sort((a, b) => a.score - b.score);
+  // Sort candidates:
+  // 1. Places inside polygon come first (sorted by score ascending)
+  // 2. Places outside polygon follow (sorted by score ascending)
+  scoredCandidates.sort((a, b) => {
+    if (a.isInsidePolygon && !b.isInsidePolygon) return -1;
+    if (!a.isInsidePolygon && b.isInsidePolygon) return 1;
+    return a.score - b.score;
+  });
 
   return {
     rankedPlaces: scoredCandidates,

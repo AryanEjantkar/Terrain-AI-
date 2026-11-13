@@ -35,7 +35,24 @@ export default function PlaceCard({
           <span className="text-xl shrink-0 p-1.5 rounded-xl bg-white/10">{place.categoryIcon || '📍'}</span>
           <div className="overflow-hidden">
             <h4 className="text-sm font-bold text-white truncate">{place.name}</h4>
-            <p className="text-[11px] text-slate-400 truncate flex items-center gap-1">
+            <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+              <span className="text-[10px] text-indigo-300/90 font-medium">
+                {place.category}
+              </span>
+              {place.associatedMall && (
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                  🏬 Inside {place.associatedMall}
+                </span>
+              )}
+              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                place.isInsidePolygon
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                  : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+              }`}>
+                {place.isInsidePolygon ? '✓ Inside Group Area' : '📍 Nearby Outside Group Area'}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 truncate flex items-center gap-1 mt-1">
               <MapPin className="w-3 h-3 text-slate-500 shrink-0" />
               <span>{place.address}</span>
             </p>

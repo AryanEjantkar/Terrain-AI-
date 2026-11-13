@@ -6,10 +6,10 @@ import { calculateHaversineDistance } from './geoUtils.js';
  * 
  * @param {{lat: number, lng: number}} point 
  * @param {Array<{lat: number, lng: number}>} polygon 
- * @param {number} [bufferKm=0.5] Fallback buffer radius if polygon has fewer than 3 vertices
+ * @param {number} [bufferKm=1.5] Fallback buffer radius if polygon has fewer than 3 vertices
  * @returns {boolean} True if point is inside polygon or within fallback buffer
  */
-export function isPointInPolygon(point, polygon, bufferKm = 0.5) {
+export function isPointInPolygon(point, polygon, bufferKm = 1.5) {
   if (!point || point.lat == null || point.lng == null) return false;
   if (!polygon || polygon.length === 0) return false;
 
@@ -39,23 +39,44 @@ export function isPointInPolygon(point, polygon, bufferKm = 0.5) {
 }
 
 /**
- * Filters an array of place items by checking if their coordinates lie within the polygon.
- * If filtering yields 0 places, returns candidates within an expanded radius so the user still gets results.
+ * Filters and tags place items by determining if they lie strictly inside the polygon or nearby outside.
+ * Prioritizes places inside the group's polygon while retaining nearby options so results are never lost.
  * 
  * @param {Array<Object>} places Array of place objects with lat & lng properties
  * @param {Array<{lat: number, lng: number}>} polygon Convex Hull polygon
- * @returns {{ insidePlaces: Array<Object>, isExpanded: boolean }}
+ * @returns {{ insidePlaces: Array<Object>, isExpanded: boolean, insideCount: number, outsideCount: number }}
  */
 export function filterPlacesInPolygon(places, polygon) {
-  if (!places || places.length === 0) return { insidePlaces: [], isExpanded: false };
-  if (!polygon || polygon.length === 0) return { insidePlaces: places, isExpanded: false };
-
-  const strictlyInside = places.filter(place => isPointInPolygon({ lat: place.lat, lng: place.lng }, polygon));
-
-  if (strictlyInside.length > 0) {
-    return { insidePlaces: strictlyInside, isExpanded: false };
+  if (!places || places.length === 0) {
+    return { insidePlaces: [], isExpanded: false, insideCount: 0, outsideCount: 0 };
   }
 
-  // If no places fall strictly inside (e.g. tight polygon), include places near the boundary polygon
-  return { insidePlaces: places, isExpanded: true };
+  const strictlyInside = [];
+  const nearbyOutside = [];
+
+  for (const place of places) {
+    const isInside = isPointInPolygon({ lat: place.lat, lng: place.lng }, polygon);
+    const taggedPlace = {
+      ...place,
+      isInsidePolygon: isInside,
+      areaStatus: isInside ? 'Inside Group Area' : 'Nearby Outside Group Area'
+    };
+
+    if (isInside) {
+      strictlyInside.push(taggedPlace);
+    } else {
+      nearbyOutside.push(taggedPlace);
+    }
+  }
+
+  // Prioritize places inside the polygon first, followed by nearby outside places
+  const combinedPlaces = [...strictlyInside, ...nearbyOutside];
+  const isExpanded = strictlyInside.length === 0;
+
+  return {
+    insidePlaces: combinedPlaces,
+    isExpanded,
+    insideCount: strictlyInside.length,
+    outsideCount: nearbyOutside.length
+  };
 }

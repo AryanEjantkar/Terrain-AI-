@@ -7,7 +7,10 @@ import numpy as np
 from PIL import Image
 import io
 import os
+import json
+from datetime import datetime
 import requests
+from pydantic import BaseModel
 
 app = FastAPI(title="Terrain Prediction API")
 
@@ -111,6 +114,68 @@ def process_image(contents):
         "confidence": confidence,
         "all_scores": {CLASS_NAMES[i]: float(scores[i]) for i in range(len(CLASS_NAMES))}
     }
+
+class FeedbackSubmission(BaseModel):
+    name: str
+    email: str
+    category: str
+    description: str
+
+VALID_CATEGORIES = [
+    "UI / Design Issue",
+    "Mobile Responsiveness",
+    "Map Issue",
+    "Incorrect Location Results",
+    "AI Prediction Issue",
+    "Feature Suggestion",
+    "General Feedback"
+]
+
+FEEDBACK_FILE = os.path.join(os.path.dirname(__file__), "feedback.json")
+
+@app.post("/api/feedback")
+async def submit_feedback(feedback: FeedbackSubmission):
+    name = (feedback.name or "").strip()
+    email = (feedback.email or "").strip()
+    category = (feedback.category or "").strip()
+    description = (feedback.description or "").strip()
+
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required.")
+    if not email or "@" not in email or "." not in email:
+        raise HTTPException(status_code=400, detail="A valid email address is required.")
+    if category not in VALID_CATEGORIES:
+        raise HTTPException(status_code=400, detail=f"Category must be one of: {', '.join(VALID_CATEGORIES)}")
+    if not description or len(description) < 5:
+        raise HTTPException(status_code=400, detail="Description must be at least 5 characters.")
+
+    entry = {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "name": name,
+        "email": email,
+        "category": category,
+        "description": description
+    }
+
+    feedbacks = []
+    if os.path.exists(FEEDBACK_FILE):
+        try:
+            with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
+                feedbacks = json.load(f)
+                if not isinstance(feedbacks, list):
+                    feedbacks = []
+        except Exception:
+            feedbacks = []
+
+    feedbacks.append(entry)
+
+    try:
+        with open(FEEDBACK_FILE, "w", encoding="utf-8") as f:
+            json.dump(feedbacks, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save feedback: {str(e)}")
+
+    return {"status": "success", "message": "Feedback submitted successfully"}
 
 # Serve Frontend Static Files
 # We check if the frontend/dist folder exists (built by Docker)

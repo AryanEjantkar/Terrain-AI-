@@ -185,6 +185,13 @@ export default function ConnectMap({
                     <span>{place.categoryIcon}</span>
                     <strong className="text-sm">{place.name}</strong>
                   </div>
+                  {place.category && <p className="text-[11px] text-indigo-600 font-semibold">{place.category}</p>}
+                  {place.associatedMall && <p className="text-[10px] text-purple-700 font-semibold mt-0.5">🏬 Inside {place.associatedMall}</p>}
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full inline-block mt-1 ${
+                    place.isInsidePolygon ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    {place.isInsidePolygon ? '✓ Inside Group Area' : '📍 Nearby Outside Group Area'}
+                  </span>
                   {isBest && (
                     <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 block mt-1">
                       ⭐ Best Meeting Spot

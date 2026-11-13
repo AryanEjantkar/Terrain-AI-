@@ -130,7 +130,7 @@ export default function AddPersonModal({
             padding: '1.75rem',
             color: '#ffffff'
           }}
-          className="relative shrink-0 font-['Outfit',sans-serif]"
+          className="relative shrink-0 font-['Outfit',sans-serif] max-h-[90vh] overflow-y-auto"
         >
           {/* Header */}
           <div className="flex justify-between items-start mb-6 border-b border-purple-500/20 pb-4">

@@ -3,6 +3,11 @@ import axios from 'axios';
 const NOMINATIM_SEARCH_URL = 'https://nominatim.openstreetmap.org/search';
 const NOMINATIM_REVERSE_URL = 'https://nominatim.openstreetmap.org/reverse';
 
+const APP_HEADERS = {
+  'User-Agent': 'TerrainAI-Planner/1.0 (https://github.com/AryanEjantkar/Terrain-AI-; terrainai@connect.org)',
+  'Accept-Language': 'en-US,en'
+};
+
 /**
  * Geocodes an address string to latitude/longitude coordinates.
  * 
@@ -22,9 +27,7 @@ export async function geocodeAddress(addressQuery) {
         addressdetails: 1,
         limit: 1
       },
-      headers: {
-        'Accept-Language': 'en-US,en'
-      },
+      headers: APP_HEADERS,
       timeout: 8000
     });
 
@@ -69,9 +72,7 @@ export async function reverseGeocode(lat, lng) {
         format: 'json',
         zoom: 14
       },
-      headers: {
-        'Accept-Language': 'en-US,en'
-      },
+      headers: APP_HEADERS,
       timeout: 6000
     });
 
