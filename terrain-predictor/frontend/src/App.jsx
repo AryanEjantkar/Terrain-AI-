@@ -150,14 +150,15 @@ const MapBoundsAdjuster = ({ people, hullPoints, selectedPlace }) => {
   return null;
 };
 
-// Guarantees Leaflet properly sizes itself when mounted or tab changes
-const MapSizeFix = () => {
+// Guarantees Leaflet properly sizes itself when mounted, tab changes, or panel toggles
+const MapSizeFix = ({ activeTab, isPanelCollapsed }) => {
   const map = useMap();
   useEffect(() => {
-    const t1 = setTimeout(() => map.invalidateSize(), 150);
-    const t2 = setTimeout(() => map.invalidateSize(), 600);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [map]);
+    const t1 = setTimeout(() => map.invalidateSize(), 100);
+    const t2 = setTimeout(() => map.invalidateSize(), 350);
+    const t3 = setTimeout(() => map.invalidateSize(), 700);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [map, activeTab, isPanelCollapsed]);
   return null;
 };
 
@@ -467,18 +468,23 @@ function App() {
           style={{ width: '100vw', height: '100vh', position: 'absolute', inset: 0 }}
           ref={mapRef}
         >
-          <MapSizeFix />
+          <MapSizeFix activeTab={activeTab} isPanelCollapsed={isPanelCollapsed} />
           {activeTab === 'analysis' ? (
             /* Satellite Tile Layer for Predict Feature (ArcGIS World Imagery) */
             <TileLayer
+              key="satellite-tile-layer"
               url="https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-              attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+              attribution='&copy; <a href="https://www.esri.com/">Esri</a> &mdash; World Imagery'
+              maxZoom={19}
             />
           ) : (
-            /* 2D Street Map for Connect Feature (Esri World Street Map - 100% Free, No API Key, Clean Street View) */
+            /* 2D Street Map for Connect Feature (OpenStreetMap Standard Tiles - 100% Free, Crisp Street Names, No API Key, No Watermark) */
             <TileLayer
-              url="https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
-              attribution='&copy; <a href="https://www.esri.com/">Esri</a> &mdash; Street Map'
+              key="osm-street-tile-layer"
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              maxZoom={19}
+              subdomains={['a', 'b', 'c']}
             />
           )}
 
@@ -572,7 +578,7 @@ function App() {
         </MapContainer>
       </div>
 
-      {/* TOP HEADER OVERLAY (Cleanly Separated from Sidebar Panel) */}
+      {/* TOP HEADER OVERLAY (Logo, Central Nav Tabs, Search & GPS) */}
       <header className="app-header">
         {/* Logo */}
         <motion.div 
@@ -589,7 +595,46 @@ function App() {
           </div>
         </motion.div>
 
-        {/* Right Search Bar & Mode Switcher */}
+        {/* Central Nav Tabs (Primary Application Navigation) */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="app-nav-tabs glass p-1.5 rounded-2xl shadow-xl pointer-events-auto"
+        >
+          {[
+            { id: 'connect', label: 'Connect', icon: Users, count: people.length },
+            { id: 'analysis', label: 'Predict', icon: Globe },
+            { id: 'about', label: 'About', icon: Info },
+            { id: 'contact', label: 'Contact Us', icon: Mail }
+          ].map(tab => {
+            const isActive = activeTab === tab.id;
+            const IconComp = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setIsPanelCollapsed(false);
+                }}
+                className={`py-1.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                  isActive 
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 border border-indigo-400/60' 
+                    : 'text-slate-300 hover:text-white hover:bg-white/10 border border-transparent'
+                }`}
+              >
+                <IconComp className="w-3.5 h-3.5" />
+                <span>{tab.label}</span>
+                {tab.count !== undefined && tab.count > 0 && (
+                  <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-black bg-indigo-400/30 text-indigo-200">
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </motion.div>
+
+        {/* Right Search Bar & GPS Button */}
         <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
           <form onSubmit={handleSearch} className="flex gap-1 sm:gap-2">
             <input 
@@ -605,6 +650,7 @@ function App() {
               type="submit"
               disabled={isSearching}
               className="glass p-2 px-2.5 rounded-xl flex items-center justify-center min-w-[34px] shadow-xl text-white"
+              title="Search City or Address"
             >
               {isSearching ? <div className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" /> : <Activity className="w-4 h-4 text-indigo-400 rotate-90" />}
             </motion.button>
@@ -615,35 +661,9 @@ function App() {
             whileTap={{ scale: 0.95 }}
             className="glass p-2 rounded-xl shadow-xl shrink-0 text-white"
             onClick={goToMyLocation}
-            title="My Location"
+            title="My GPS Location"
           >
             <Navigation className="w-4 h-4 text-indigo-400" />
-          </motion.button>
-
-          {/* Mode Switcher */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setActiveTab(activeTab === 'connect' ? 'analysis' : 'connect')}
-            style={{
-              backgroundColor: activeTab === 'connect' ? 'rgba(99, 102, 241, 0.45)' : 'rgba(15, 23, 42, 0.85)',
-              border: activeTab === 'connect' ? '1.5px solid #818cf8' : '1px solid rgba(255, 255, 255, 0.15)'
-            }}
-            className="px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 text-white shadow-xl backdrop-blur-xl transition-all shrink-0"
-          >
-            {activeTab === 'connect' ? (
-              <>
-                <Globe className="w-3.5 h-3.5 text-indigo-300 animate-pulse" />
-                <span className="hidden sm:inline">🛰 Satellite AI</span>
-                <span className="sm:hidden">Predict</span>
-              </>
-            ) : (
-              <>
-                <Users className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="hidden sm:inline">🔗 Connect</span>
-                <span className="sm:hidden">Connect</span>
-              </>
-            )}
           </motion.button>
         </div>
       </header>
@@ -710,39 +730,42 @@ function App() {
             animate={{ y: 0, opacity: 1 }}
             className="glass-panel w-full h-full rounded-3xl pointer-events-auto flex flex-col overflow-hidden shadow-2xl"
           >
-            {/* Tabs Navigation Header & Minimize Control */}
-            <div className="flex items-center justify-between p-2 sm:p-2.5 border-b border-white/10 bg-black/40 shrink-0">
-              <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1 pr-2">
-                {[
-                  { id: 'connect', label: '🔗 Connect' },
-                  { id: 'analysis', label: '🛰 Predict' },
-                  { id: 'about', label: 'ℹ️ About' },
-                  { id: 'contact', label: '📧 Contact Us' }
-                ].map(tab => {
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      style={{ 
-                        backgroundColor: isActive ? 'rgba(99, 102, 241, 0.45)' : 'transparent',
-                        border: isActive ? '1px solid rgba(129, 140, 248, 0.6)' : '1px solid transparent',
-                        color: isActive ? '#fff' : '#94a3b8'
-                      }}
-                      className="py-1.5 px-2.5 text-[11px] font-extrabold uppercase tracking-wider transition-all rounded-xl whitespace-nowrap shrink-0"
-                    >
-                      {tab.label}
-                    </button>
-                  );
-                })}
+            {/* Section Header & Minimize Control */}
+            <div className="flex items-center justify-between p-3 px-4 border-b border-white/10 bg-black/40 shrink-0">
+              <div className="flex items-center gap-2">
+                {activeTab === 'connect' && (
+                  <>
+                    <Users className="w-4 h-4 text-indigo-400" />
+                    <span className="text-xs font-black uppercase tracking-wider text-white">Group Meeting Planner</span>
+                  </>
+                )}
+                {activeTab === 'analysis' && (
+                  <>
+                    <Globe className="w-4 h-4 text-indigo-400" />
+                    <span className="text-xs font-black uppercase tracking-wider text-white">Satellite Land-Use AI</span>
+                  </>
+                )}
+                {activeTab === 'about' && (
+                  <>
+                    <Info className="w-4 h-4 text-indigo-400" />
+                    <span className="text-xs font-black uppercase tracking-wider text-white">About Terrain AI</span>
+                  </>
+                )}
+                {activeTab === 'contact' && (
+                  <>
+                    <Mail className="w-4 h-4 text-indigo-400" />
+                    <span className="text-xs font-black uppercase tracking-wider text-white">Feedback & Support</span>
+                  </>
+                )}
               </div>
 
               {/* Minimize / Collapse Button */}
               <button
                 onClick={() => setIsPanelCollapsed(true)}
                 title="Collapse Panel (View Full Map)"
-                className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-all shrink-0"
+                className="p-1.5 px-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-all shrink-0 flex items-center gap-1 text-[11px] font-bold"
               >
+                <span>Hide</span>
                 <ChevronLeft className="w-4 h-4 hidden sm:block" />
                 <ChevronRight className="w-4 h-4 rotate-90 sm:hidden" />
               </button>
