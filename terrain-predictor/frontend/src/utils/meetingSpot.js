@@ -45,12 +45,16 @@ export function rankMeetingSpots(candidatePlaces, people) {
     };
   });
 
-  // Sort candidates:
-  // 1. Places inside polygon come first (sorted by score ascending)
-  // 2. Places outside polygon follow (sorted by score ascending)
+  // Sort candidates by tier first, then by score:
+  // 1. Places inside polygon come first (groupTier === 'inside')
+  // 2. Places nearby outside polygon follow (groupTier === 'nearby')
+  // 3. Popular regional destinations follow (groupTier === 'popular')
+  const tierWeight = { inside: 0, nearby: 1, popular: 2 };
+
   scoredCandidates.sort((a, b) => {
-    if (a.isInsidePolygon && !b.isInsidePolygon) return -1;
-    if (!a.isInsidePolygon && b.isInsidePolygon) return 1;
+    const tierA = tierWeight[a.groupTier] != null ? tierWeight[a.groupTier] : (a.isInsidePolygon ? 0 : 1);
+    const tierB = tierWeight[b.groupTier] != null ? tierWeight[b.groupTier] : (b.isInsidePolygon ? 0 : 1);
+    if (tierA !== tierB) return tierA - tierB;
     return a.score - b.score;
   });
 

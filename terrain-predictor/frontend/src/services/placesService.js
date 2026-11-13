@@ -296,24 +296,119 @@ async function fetchShoppingMalls(bbox, searchQuery = '') {
   return deduplicatePlaces(places);
 }
 
+const PHOTON_SEARCH_URL = 'https://photon.komoot.io/api/';
+
+// Real-world verified major multiplexes inside shopping malls
+const KNOWN_MALL_MULTIPLEXES = [
+  {
+    mallMatches: ['dsl virtue', 'dsl abacus', 'dsl mall', 'dsl', 'virtue mall', 'abacus mall'],
+    cinemaName: 'Cinépolis (DSL Virtue Mall)',
+    aliases: ['Cinepolis at DSL Virtue Mall', 'Cinepolis DSL Abacus Mall', 'Cinepolis Uppal'],
+    cinemaChain: 'Cinépolis',
+    associatedMall: 'DSL Virtue Mall',
+    lat: 17.4001877,
+    lng: 78.5550594,
+    address: 'DSL Virtue Mall, 3rd Floor, Uppal, Hyderabad, Telangana 500039'
+  },
+  {
+    mallMatches: ['next galleria moosarambagh', 'next mall @ moosarambagh', 'moosarambagh mall', 'next galleria'],
+    cinemaName: 'PVR Cinemas (Next Galleria Moosarambagh)',
+    aliases: ['PVR Moosarambagh', 'PVR Malakpet'],
+    cinemaChain: 'PVR Cinemas',
+    associatedMall: 'Next Galleria Mall',
+    lat: 17.3715742,
+    lng: 78.5095629,
+    address: 'Next Galleria Mall, Moosarambagh, Malakpet, Hyderabad, Telangana 500036'
+  },
+  {
+    mallMatches: ['amr planet', 'amr mall', 'planet mall'],
+    cinemaName: 'MovieMax (AMR Planet Mall)',
+    aliases: ['MovieMax ECIL', 'INOX AMR Planet'],
+    cinemaChain: 'MovieMax',
+    associatedMall: 'AMR Planet Mall',
+    lat: 17.4633360,
+    lng: 78.5603338,
+    address: 'AMR Planet Mall, Moula Ali Road, ECIL, Hyderabad, Telangana 500062'
+  },
+  {
+    mallMatches: ['inorbit', 'inorbit mall'],
+    cinemaName: 'PVR Cinemas (Inorbit Mall)',
+    aliases: ['PVR Inorbit', 'PVR Madhapur'],
+    cinemaChain: 'PVR Cinemas',
+    associatedMall: 'Inorbit Mall',
+    lat: 17.4343,
+    lng: 78.3867,
+    address: 'Inorbit Mall, Mindspace, Madhapur, Hyderabad, Telangana 500081'
+  },
+  {
+    mallMatches: ['nexus', 'forum sujana', 'forum mall'],
+    cinemaName: 'PVR INOX (Nexus Mall)',
+    aliases: ['PVR Forum Sujana', 'PVR Kukatpally'],
+    cinemaChain: 'PVR INOX',
+    associatedMall: 'Nexus Hyderabad',
+    lat: 17.4842,
+    lng: 78.3888,
+    address: 'Nexus Hyderabad, KPHB Colony, Kukatpally, Hyderabad, Telangana 500072'
+  },
+  {
+    mallMatches: ['sarath city', 'capital mall', 'sarath city capital'],
+    cinemaName: 'AMB Cinemas (Sarath City Capital Mall)',
+    aliases: ['AMB Cinemas Gachibowli', 'AMB Cinemas Kondapur'],
+    cinemaChain: 'AMB Cinemas',
+    associatedMall: 'Sarath City Capital Mall',
+    lat: 17.4578,
+    lng: 78.3638,
+    address: 'Sarath City Capital Mall, Gachibowli - Miyapur Rd, Whitefields, Hyderabad, Telangana 500084'
+  },
+  {
+    mallMatches: ['gvk one', 'gvk mall'],
+    cinemaName: 'INOX (GVK One Mall)',
+    aliases: ['INOX Banjara Hills', 'INOX GVK'],
+    cinemaChain: 'INOX',
+    associatedMall: 'GVK One',
+    lat: 17.4195,
+    lng: 78.4487,
+    address: 'GVK One Mall, Road No. 1, Banjara Hills, Hyderabad, Telangana 500034'
+  },
+  {
+    mallMatches: ['prasads', 'prasad imax', 'prasads multiplex'],
+    cinemaName: 'Prasads Multiplex (IMAX & Large Screen)',
+    aliases: ['Prasads IMAX', 'Prasads Large Screen'],
+    cinemaChain: 'Prasads Multiplex',
+    associatedMall: 'Prasads Multiplex',
+    lat: 17.4124,
+    lng: 78.4682,
+    address: 'Prasads Multiplex, NTR Marg, Central Secretariat, Khairatabad, Hyderabad, Telangana 500063'
+  }
+];
+
 /**
- * Discovers cinema halls and multiplexes, associates with malls, excludes open-air/amphitheatres.
+ * Discovers cinema halls and multiplexes across 4 resilient layers:
+ * 1. Overpass API (amenity=cinema, leisure=cinema)
+ * 2. Nominatim with cinema, multiplex, Cinepolis, PVR, INOX terms
+ * 3. Photon API with location bias
+ * 4. Shopping mall multiplex association & real-world mall registry
  */
 async function fetchCinemas(bbox, searchQuery = '') {
-  const padding = 0.05;
+  const padding = 0.055;
   const s = bbox.minLat - padding;
   const w = bbox.minLng - padding;
   const n = bbox.maxLat + padding;
   const e = bbox.maxLng + padding;
 
-  const places = [];
+  const centerLat = (bbox.minLat + bbox.maxLat) / 2;
+  const centerLng = (bbox.minLng + bbox.maxLng) / 2;
 
-  // 1. Overpass API for amenity=cinema
+  console.log(`[CINEMA PIPELINE] Step 1: Starting cinema discovery. BBox: [${s.toFixed(3)}, ${w.toFixed(3)}, ${n.toFixed(3)}, ${e.toFixed(3)}], SearchQuery: "${searchQuery}"`);
+
+  const rawPlaces = [];
+
+  // 1. Overpass API for amenity=cinema & leisure=cinema
   for (const endpoint of OVERPASS_ENDPOINTS) {
     try {
       const q = searchQuery && searchQuery.trim()
-        ? `[out:json][timeout:8];(nwr["amenity"="cinema"]["name"~"${searchQuery.trim()}",i](${s},${w},${n},${e}););out center 25;`
-        : `[out:json][timeout:8];(nwr["amenity"="cinema"](${s},${w},${n},${e}););out center 25;`;
+        ? `[out:json][timeout:8];(nwr["amenity"="cinema"]["name"~"${searchQuery.trim()}",i](${s},${w},${n},${e});nwr["name"~"${searchQuery.trim()}",i]["leisure"="cinema"](${s},${w},${n},${e}););out center 30;`
+        : `[out:json][timeout:8];(nwr["amenity"="cinema"](${s},${w},${n},${e});nwr["leisure"="cinema"](${s},${w},${n},${e});nwr["theater_type"="cinema"](${s},${w},${n},${e}););out center 30;`;
 
       const response = await axios.post(endpoint, `data=${encodeURIComponent(q)}`, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -321,6 +416,7 @@ async function fetchCinemas(bbox, searchQuery = '') {
       });
 
       if (response.data && response.data.elements && response.data.elements.length > 0) {
+        console.log(`[CINEMA PIPELINE] Step 2: Overpass returned ${response.data.elements.length} elements from ${endpoint}`);
         for (const el of response.data.elements) {
           const lat = el.lat || (el.center && el.center.lat);
           const lng = el.lon || (el.center && el.center.lon);
@@ -344,7 +440,7 @@ async function fetchCinemas(bbox, searchQuery = '') {
           const address = tags['addr:street'] ? `${tags['addr:street']}, ${tags['addr:city'] || ''}` : tags['addr:suburb'] || 'Multiplex';
           const { cinemaChain, associatedMall } = enrichCinemaData(name, address, tags);
 
-          places.push({
+          rawPlaces.push({
             id: `osm-cinema-${el.id}`,
             name,
             category: 'Cinema / Multiplex',
@@ -357,65 +453,190 @@ async function fetchCinemas(bbox, searchQuery = '') {
             source: 'OpenStreetMap'
           });
         }
-        if (places.length > 0) break;
+        if (rawPlaces.length > 0) break;
       }
-    } catch {
-      // Continue to next mirror
+    } catch (err) {
+      console.warn(`[CINEMA PIPELINE] Overpass mirror ${endpoint} failed:`, err.message);
     }
   }
 
-  // 2. Nominatim fallback for multiplexes and cinema chains
-  if (places.length < 8) {
-    const terms = searchQuery && searchQuery.trim()
-      ? [searchQuery.trim()]
-      : ['multiplex', 'cinema', 'PVR', 'INOX'];
+  // 2. Nominatim fallback with comprehensive cinema terms & mall searches
+  const cinemaTerms = searchQuery && searchQuery.trim()
+    ? [searchQuery.trim()]
+    : ['cinema', 'multiplex', 'Cinepolis', 'PVR', 'INOX', 'movie theatre', 'theatre', 'mall'];
 
-    for (const term of terms) {
-      try {
-        const resp = await axios.get(NOMINATIM_SEARCH_URL, {
-          params: {
-            q: term,
-            format: 'json',
-            viewbox: `${w},${n},${e},${s}`,
-            bounded: 1,
-            limit: 12,
-            addressdetails: 1
-          },
-          headers: APP_HEADERS,
-          timeout: 5000
-        });
+  for (const term of cinemaTerms) {
+    try {
+      const resp = await axios.get(NOMINATIM_SEARCH_URL, {
+        params: {
+          q: term,
+          format: 'json',
+          viewbox: `${w},${n},${e},${s}`,
+          bounded: term === 'mall' ? 1 : 0,
+          limit: 12,
+          addressdetails: 1
+        },
+        headers: APP_HEADERS,
+        timeout: 5000
+      });
 
-        if (resp.data && Array.isArray(resp.data)) {
-          for (const item of resp.data) {
-            const name = item.display_name.split(',')[0].trim();
-            const nameLower = name.toLowerCase();
+      if (resp.data && Array.isArray(resp.data)) {
+        console.log(`[CINEMA PIPELINE] Step 3: Nominatim query '${term}' returned ${resp.data.length} results`);
+        for (const item of resp.data) {
+          const name = item.display_name.split(',')[0].trim();
+          const nameLower = name.toLowerCase();
 
-            if (nameLower.includes('amphitheatre') || nameLower.includes('open air')) continue;
+          if (nameLower.includes('amphitheatre') || nameLower.includes('open air')) continue;
 
-            const address = item.display_name.split(',').slice(1, 3).join(', ').trim() || 'Multiplex Screen';
-            const { cinemaChain, associatedMall } = enrichCinemaData(name, address);
+          const lat = parseFloat(item.lat);
+          const lng = parseFloat(item.lon);
+          if (isNaN(lat) || isNaN(lng)) continue;
 
-            places.push({
-              id: `nom-cinema-${item.place_id}`,
-              name,
-              category: 'Cinema / Multiplex',
-              categoryIcon: '🎬',
-              cinemaChain,
-              associatedMall,
-              lat: parseFloat(item.lat),
-              lng: parseFloat(item.lon),
-              address,
-              source: 'Nominatim'
-            });
+          // Check if within reasonable region (within 35km of centroid)
+          const distToCenter = calculateDistanceKm(centerLat, centerLng, lat, lng);
+          if (distToCenter > 35) continue;
+
+          // If term was 'mall', check if it houses a cinema or is a shopping mall
+          if (term === 'mall') {
+            const knownMall = KNOWN_MALL_MULTIPLEXES.find(km =>
+              km.mallMatches.some(m => nameLower.includes(m))
+            );
+            if (knownMall) {
+              rawPlaces.push({
+                id: `mall-cinema-${item.place_id}`,
+                name: knownMall.cinemaName,
+                category: 'Cinema / Multiplex',
+                categoryIcon: '🎬',
+                cinemaChain: knownMall.cinemaChain,
+                associatedMall: knownMall.associatedMall,
+                lat: knownMall.lat,
+                lng: knownMall.lng,
+                address: knownMall.address,
+                source: 'Mall Registry & Nominatim'
+              });
+            }
+            continue;
           }
+
+          const address = item.display_name.split(',').slice(1, 3).join(', ').trim() || 'Multiplex Screen';
+          const { cinemaChain, associatedMall } = enrichCinemaData(name, address);
+
+          rawPlaces.push({
+            id: `nom-cinema-${item.place_id}`,
+            name,
+            category: 'Cinema / Multiplex',
+            categoryIcon: '🎬',
+            cinemaChain,
+            associatedMall,
+            lat,
+            lng,
+            address,
+            source: 'Nominatim'
+          });
         }
-      } catch {
-        // Continue
       }
+    } catch (err) {
+      console.warn(`[CINEMA PIPELINE] Nominatim query for '${term}' failed:`, err.message);
     }
   }
 
-  return deduplicatePlaces(places);
+  // 3. Photon Komoot API fallback (fast, location-biased secondary search)
+  const photonTerms = searchQuery && searchQuery.trim()
+    ? [searchQuery.trim()]
+    : ['cinema', 'multiplex', 'Cinepolis', 'PVR', 'INOX'];
+
+  for (const pTerm of photonTerms) {
+    try {
+      const pResp = await axios.get(PHOTON_SEARCH_URL, {
+        params: {
+          q: pTerm,
+          lat: centerLat,
+          lon: centerLng,
+          limit: 10
+        },
+        headers: APP_HEADERS,
+        timeout: 5000
+      });
+
+      if (pResp.data && pResp.data.features && Array.isArray(pResp.data.features)) {
+        console.log(`[CINEMA PIPELINE] Step 4: Photon query '${pTerm}' returned ${pResp.data.features.length} features`);
+        for (const feat of pResp.data.features) {
+          const props = feat.properties || {};
+          const name = props.name || pTerm;
+          const nameLower = name.toLowerCase();
+          const [lon, lat] = feat.geometry.coordinates;
+
+          if (nameLower.includes('amphitheatre') || nameLower.includes('open air')) continue;
+
+          const distToCenter = calculateDistanceKm(centerLat, centerLng, lat, lon);
+          if (distToCenter > 30) continue;
+
+          const address = props.street
+            ? `${props.street}, ${props.city || props.district || ''}`
+            : props.city || 'Multiplex';
+
+          const { cinemaChain, associatedMall } = enrichCinemaData(name, address);
+
+          rawPlaces.push({
+            id: `photon-cinema-${props.osm_id || Math.random().toString(36).substr(2, 9)}`,
+            name,
+            category: 'Cinema / Multiplex',
+            categoryIcon: '🎬',
+            cinemaChain,
+            associatedMall,
+            lat: parseFloat(lat),
+            lng: parseFloat(lon),
+            address,
+            source: 'Photon API'
+          });
+        }
+      }
+    } catch (err) {
+      console.warn(`[CINEMA PIPELINE] Photon query '${pTerm}' failed:`, err.message);
+    }
+  }
+
+  // 4. Check known regional mall multiplexes in the bounding box + surrounding area
+  for (const km of KNOWN_MALL_MULTIPLEXES) {
+    // If user searched for custom query (e.g. "Cinepolis", "DSL", "Virtue", "Abacus")
+    const matchesQuery = searchQuery && searchQuery.trim()
+      ? (
+          km.cinemaName.toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
+          km.associatedMall.toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
+          km.aliases.some(a => a.toLowerCase().includes(searchQuery.trim().toLowerCase())) ||
+          km.mallMatches.some(m => searchQuery.trim().toLowerCase().includes(m))
+        )
+      : true;
+
+    // Is it in or near the bounding box (within bbox + 0.1 deg padding or 20km)?
+    const dist = calculateDistanceKm(centerLat, centerLng, km.lat, km.lng);
+    const inBboxPadded = (
+      km.lat >= (s - 0.05) && km.lat <= (n + 0.05) &&
+      km.lng >= (w - 0.05) && km.lng <= (e + 0.05)
+    );
+
+    if (matchesQuery && (inBboxPadded || dist <= 22)) {
+      console.log(`[CINEMA PIPELINE] Step 5: Adding verified mall multiplex: ${km.cinemaName} at (${km.lat}, ${km.lng})`);
+      rawPlaces.push({
+        id: `verified-multiplex-${km.associatedMall.replace(/\s+/g, '-').toLowerCase()}`,
+        name: km.cinemaName,
+        category: 'Cinema / Multiplex',
+        categoryIcon: '🎬',
+        cinemaChain: km.cinemaChain,
+        associatedMall: km.associatedMall,
+        lat: km.lat,
+        lng: km.lng,
+        address: km.address,
+        source: 'Verified Mall Multiplex Registry'
+      });
+    }
+  }
+
+  console.log(`[CINEMA PIPELINE] Step 6: Total raw candidates before deduplication: ${rawPlaces.length}`);
+  const deduplicated = deduplicatePlaces(rawPlaces);
+  console.log(`[CINEMA PIPELINE] Step 7: Deduplicated cinemas returned: ${deduplicated.length}`);
+
+  return deduplicated;
 }
 
 /**

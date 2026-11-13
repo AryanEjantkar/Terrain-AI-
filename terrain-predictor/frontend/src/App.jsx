@@ -199,6 +199,9 @@ function App() {
   const [loadingPlaces, setLoadingPlaces] = useState(false);
   const [searchError, setSearchError] = useState(null);
 
+  const [placesTierFilter, setPlacesTierFilter] = useState('all'); // 'all' | 'inside' | 'nearby' | 'popular'
+  const [tierCounts, setTierCounts] = useState({ inside: 0, nearby: 0, popular: 0 });
+
   // Contact Us Feedback State
   const [feedbackForm, setFeedbackForm] = useState({
     name: '',
@@ -353,26 +356,48 @@ function App() {
     setSearchError(null);
     setSelectedPlace(null);
 
+    console.log(`[CONNECT SEARCH] Initiating search for category: ${catId}, customQuery: "${customQ}"`);
+    console.log(`[CONNECT SEARCH] Current group members (${people.length}):`, people.map(p => `${p.name}: (${p.lat.toFixed(4)}, ${p.lng.toFixed(4)})`));
+    console.log(`[CONNECT SEARCH] BoundingBox:`, boundingBox);
+
     try {
       const rawPlaces = await fetchPlacesInArea(boundingBox, catId, customQ);
 
       if (!rawPlaces || rawPlaces.length === 0) {
+        console.warn(`[CONNECT SEARCH] fetchPlacesInArea returned 0 candidates.`);
         setSearchError(catId === 'famous'
           ? 'No famous spots found in this immediate area. Try expanding your search area or searching for a specific landmark above.'
           : 'No places found in this area. Try another category or custom query.');
         setPlaces([]);
         setBestSpot(null);
+        setTierCounts({ inside: 0, nearby: 0, popular: 0 });
         return;
       }
 
-      const { insidePlaces, isExpanded } = filterPlacesInPolygon(
+      console.log(`[CONNECT SEARCH] Total raw places retrieved: ${rawPlaces.length}`);
+
+      const {
+        insidePlaces,
+        nearbyPlaces,
+        popularPlaces,
+        allPlaces,
+        isExpanded,
+        insideCount,
+        nearbyCount,
+        popularCount
+      } = filterPlacesInPolygon(
         rawPlaces,
         hullPoints.length >= 3 ? hullPoints : people
       );
 
-      setIsExpandedArea(isExpanded);
+      console.log(`[CONNECT SEARCH] Tiers breakdown -> Inside: ${insideCount}, Nearby: ${nearbyCount}, Popular: ${popularCount}`);
 
-      const { rankedPlaces, bestSpot: optimalSpot } = rankMeetingSpots(insidePlaces, people);
+      setIsExpandedArea(isExpanded);
+      setTierCounts({ inside: insideCount, nearby: nearbyCount, popular: popularCount });
+
+      const { rankedPlaces, bestSpot: optimalSpot } = rankMeetingSpots(allPlaces, people);
+
+      console.log(`[CONNECT SEARCH] Optimal Best Spot selected:`, optimalSpot?.name, `@ (${optimalSpot?.lat}, ${optimalSpot?.lng}) [${optimalSpot?.groupTier}]`);
 
       setPlaces(rankedPlaces);
       setBestSpot(optimalSpot);
@@ -424,6 +449,11 @@ function App() {
   const polygonCoords = useMemo(() => {
     return (hullPoints && hullPoints.length >= 3) ? hullPoints.map(p => [p.lat, p.lng]) : [];
   }, [hullPoints]);
+
+  const displayedPlaces = useMemo(() => {
+    if (placesTierFilter === 'all') return places;
+    return places.filter(p => p.groupTier === placesTierFilter);
+  }, [places, placesTierFilter]);
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', backgroundColor: '#0b1120' }} className="font-['Outfit',sans-serif] select-none">
@@ -512,9 +542,17 @@ function App() {
                       </p>
                     )}
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full inline-block mt-1 ${
-                      place.isInsidePolygon ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                      place.groupTier === 'inside'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : place.groupTier === 'nearby'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-purple-100 text-purple-800'
                     }`}>
-                      {place.isInsidePolygon ? '✓ Inside Group Area' : '📍 Nearby Outside Group Area'}
+                      {place.groupTier === 'inside'
+                        ? '✓ Inside Group Area'
+                        : place.groupTier === 'nearby'
+                        ? '📍 Nearby Outside Group Area'
+                        : '⭐ Popular Regional Destination'}
                     </span>
                     {isBest && <span className="text-[10px] font-bold text-amber-600 block mt-1">⭐ Best Meeting Spot</span>}
                     <p className="text-xs text-slate-500 mt-1">{place.address}</p>
@@ -948,7 +986,7 @@ function App() {
                     </button>
                   )}
 
-                  {/* Places Results List */}
+                  {/* Places Results List with 3 Result Group Filters */}
                   {places.length > 0 && (
                     <div className="space-y-3 pt-2">
                       <div className="flex justify-between items-center">
@@ -962,6 +1000,33 @@ function App() {
                         )}
                       </div>
 
+                      {/* Three Result Groups Filter: All / Inside / Nearby / Popular */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                        {[
+                          { id: 'all', label: `All (${places.length})` },
+                          { id: 'inside', label: `✓ Inside Area (${tierCounts.inside || 0})` },
+                          { id: 'nearby', label: `📍 Nearby (${tierCounts.nearby || 0})` },
+                          { id: 'popular', label: `⭐ Popular (${tierCounts.popular || 0})` }
+                        ].map((tab) => {
+                          const isActive = placesTierFilter === tab.id;
+                          return (
+                            <button
+                              key={tab.id}
+                              type="button"
+                              onClick={() => setPlacesTierFilter(tab.id)}
+                              style={{
+                                backgroundColor: isActive ? 'rgba(99, 102, 241, 0.45)' : 'rgba(255, 255, 255, 0.06)',
+                                border: isActive ? '1px solid #818cf8' : '1px solid rgba(255, 255, 255, 0.12)',
+                                color: isActive ? '#ffffff' : '#94a3b8'
+                              }}
+                              className="px-2.5 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all"
+                            >
+                              {tab.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+
                       {isExpandedArea && (
                         <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-[11px] flex items-start gap-2">
                           <Info className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
@@ -970,7 +1035,7 @@ function App() {
                       )}
 
                       <div className="space-y-2 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
-                        {places.map((place) => (
+                        {displayedPlaces.map((place) => (
                           <div
                             key={place.id}
                             onClick={() => setSelectedPlace(place)}
@@ -997,11 +1062,17 @@ function App() {
                                       </span>
                                     )}
                                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${
-                                      place.isInsidePolygon
+                                      place.groupTier === 'inside'
                                         ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                                        : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                                        : place.groupTier === 'nearby'
+                                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                                        : 'bg-purple-500/20 text-purple-300 border-purple-500/30'
                                     }`}>
-                                      {place.isInsidePolygon ? '✓ Inside Group Area' : '📍 Nearby Outside Group Area'}
+                                      {place.groupTier === 'inside'
+                                        ? '✓ Inside Group Area'
+                                        : place.groupTier === 'nearby'
+                                        ? '📍 Nearby Outside Group Area'
+                                        : '⭐ Popular Regional Destination'}
                                     </span>
                                   </div>
                                   <p className="text-[10px] text-slate-400 truncate mt-1">📍 {place.address}</p>

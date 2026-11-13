@@ -99,7 +99,7 @@ export default function ConnectScreen() {
       }
 
       // Filter places locally using Ray-Casting algorithm against Convex Hull polygon
-      const { insidePlaces, isExpanded } = filterPlacesInPolygon(
+      const { allPlaces, insidePlaces, isExpanded } = filterPlacesInPolygon(
         rawPlaces,
         hullPoints.length >= 3 ? hullPoints : people
       );
@@ -107,7 +107,7 @@ export default function ConnectScreen() {
       setIsExpandedArea(isExpanded);
 
       // Rank candidate places for Best Meeting Spot calculation
-      const { rankedPlaces, bestSpot: optimalSpot } = rankMeetingSpots(insidePlaces, people);
+      const { rankedPlaces, bestSpot: optimalSpot } = rankMeetingSpots(allPlaces || insidePlaces, people);
 
       setPlaces(rankedPlaces);
       setBestSpot(optimalSpot);
