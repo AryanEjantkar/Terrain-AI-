@@ -150,6 +150,17 @@ const MapBoundsAdjuster = ({ people, hullPoints, selectedPlace }) => {
   return null;
 };
 
+// Guarantees Leaflet properly sizes itself when mounted or tab changes
+const MapSizeFix = () => {
+  const map = useMap();
+  useEffect(() => {
+    const t1 = setTimeout(() => map.invalidateSize(), 150);
+    const t2 = setTimeout(() => map.invalidateSize(), 600);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [map]);
+  return null;
+};
+
 function App() {
   const [activeTab, setActiveTab] = useState('connect'); // 'analysis' | 'connect' | 'about' | 'contact'
   const [center, setCenter] = useState({ lat: 17.3850, lng: 78.4867 }); // Hyderabad default
@@ -415,17 +426,18 @@ function App() {
   }, [hullPoints]);
 
   return (
-    <div className="relative w-full h-screen bg-slate-950 overflow-x-hidden overflow-y-hidden font-['Outfit',sans-serif] select-none">
+    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', backgroundColor: '#0b1120' }} className="font-['Outfit',sans-serif] select-none">
       
       {/* FULL SCREEN MAP LAYER */}
-      <div className="absolute inset-0 z-0 w-full h-full">
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 0 }}>
         <MapContainer 
           center={[center.lat, center.lng]} 
           zoom={14} 
           zoomControl={false}
-          className="w-full h-full"
+          style={{ width: '100vw', height: '100vh', position: 'absolute', inset: 0 }}
           ref={mapRef}
         >
+          <MapSizeFix />
           {activeTab === 'analysis' ? (
             /* Satellite Tile Layer for Predict Feature (ArcGIS World Imagery) */
             <TileLayer
@@ -433,10 +445,10 @@ function App() {
               attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
             />
           ) : (
-            /* 2D Vector Street Map for Connect Feature (OpenStreetMap standard raster tiles) */
+            /* 2D Vector Street Map for Connect Feature (CartoDB Voyager) */
             <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             />
           )}
 
@@ -522,20 +534,20 @@ function App() {
         </MapContainer>
       </div>
 
-      {/* TOP HEADER OVERLAY (Fully Mobile-Responsive) */}
-      <header className="absolute top-3 left-3 right-3 sm:top-6 sm:left-6 sm:right-6 z-20 pointer-events-none flex flex-wrap justify-between items-center gap-2">
+      {/* TOP HEADER OVERLAY (Cleanly Separated from Sidebar Panel) */}
+      <header className="app-header">
         {/* Logo */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass p-2 sm:p-3 px-3 sm:px-4 rounded-2xl flex items-center gap-2.5 shadow-xl pointer-events-auto shrink-0"
+          className="glass p-2 sm:p-2.5 px-3 sm:px-4 rounded-2xl flex items-center gap-2.5 shadow-xl pointer-events-auto shrink-0"
         >
-          <div style={{ width: '36px', height: '36px' }} className="bg-white/10 rounded-xl overflow-hidden flex items-center justify-center p-1 shrink-0">
+          <div style={{ width: '34px', height: '34px' }} className="bg-white/10 rounded-xl overflow-hidden flex items-center justify-center p-1 shrink-0">
             <img src="/logo.png" alt="Terrain AI Logo" className="w-full h-full object-contain" />
           </div>
           <div>
-            <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-white leading-none">TERRAIN<span className="text-indigo-400">AI</span></h1>
-            <p className="text-[9px] sm:text-[10px] text-slate-400 uppercase tracking-widest font-bold">Vision & Connect</p>
+            <h1 className="text-sm sm:text-base font-extrabold tracking-tight text-white leading-none">TERRAIN<span className="text-indigo-400">AI</span></h1>
+            <p className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Vision & Connect</p>
           </div>
         </motion.div>
 
@@ -547,14 +559,14 @@ function App() {
               placeholder="Search location..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="glass px-3 py-2 sm:px-4 sm:py-2.5 w-32 sm:w-48 md:w-60 text-white placeholder-white/50 focus:outline-none border border-white/10 rounded-xl text-xs sm:text-sm shadow-xl"
+              className="glass px-3 py-2 w-28 sm:w-44 md:w-56 text-white placeholder-slate-400 focus:outline-none border border-white/10 rounded-xl text-xs shadow-xl"
             />
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               type="submit"
               disabled={isSearching}
-              className="glass p-2 sm:p-2.5 px-3 rounded-xl flex items-center justify-center min-w-[38px] shadow-xl"
+              className="glass p-2 px-2.5 rounded-xl flex items-center justify-center min-w-[34px] shadow-xl text-white"
             >
               {isSearching ? <div className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" /> : <Activity className="w-4 h-4 text-indigo-400 rotate-90" />}
             </motion.button>
@@ -563,11 +575,11 @@ function App() {
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="glass p-2 sm:p-3 rounded-xl shadow-xl shrink-0"
+            className="glass p-2 rounded-xl shadow-xl shrink-0 text-white"
             onClick={goToMyLocation}
             title="My Location"
           >
-            <Navigation className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" />
+            <Navigation className="w-4 h-4 text-indigo-400" />
           </motion.button>
 
           {/* Mode Switcher */}
@@ -576,22 +588,22 @@ function App() {
             whileTap={{ scale: 0.95 }}
             onClick={() => setActiveTab(activeTab === 'connect' ? 'analysis' : 'connect')}
             style={{
-              backgroundColor: activeTab === 'connect' ? 'rgba(99, 102, 241, 0.5)' : 'rgba(15, 23, 42, 0.75)',
+              backgroundColor: activeTab === 'connect' ? 'rgba(99, 102, 241, 0.45)' : 'rgba(15, 23, 42, 0.85)',
               border: activeTab === 'connect' ? '1.5px solid #818cf8' : '1px solid rgba(255, 255, 255, 0.15)'
             }}
-            className="px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider flex items-center gap-1.5 text-white shadow-2xl backdrop-blur-xl transition-all shrink-0"
+            className="px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 text-white shadow-xl backdrop-blur-xl transition-all shrink-0"
           >
             {activeTab === 'connect' ? (
               <>
                 <Globe className="w-3.5 h-3.5 text-indigo-300 animate-pulse" />
-                <span className="hidden xs:inline">🛰 Satellite AI</span>
-                <span className="xs:hidden">Predict</span>
+                <span className="hidden sm:inline">🛰 Satellite AI</span>
+                <span className="sm:hidden">Predict</span>
               </>
             ) : (
               <>
                 <Users className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="hidden xs:inline">🔗 Connect</span>
-                <span className="xs:hidden">Connect</span>
+                <span className="hidden sm:inline">🔗 Connect</span>
+                <span className="sm:hidden">Connect</span>
               </>
             )}
           </motion.button>
@@ -639,28 +651,29 @@ function App() {
 
       {/* FLOATING & COLLAPSIBLE SIDEBAR PANEL (Responsive: Desktop side drawer, Mobile bottom-sheet) */}
       {!isAddModalOpen && (
-        <div className="absolute left-3 right-3 bottom-3 top-auto sm:left-6 sm:top-[96px] sm:bottom-6 sm:right-auto z-20 pointer-events-none flex items-start">
+        <div className="app-panel">
         {isPanelCollapsed ? (
           /* COLLAPSED FLOATING BADGE BUTTON */
           <motion.button
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             onClick={() => setIsPanelCollapsed(false)}
-            className="glass p-3 sm:p-3.5 rounded-full pointer-events-auto text-white shadow-2xl flex items-center gap-2 border border-white/20 hover:scale-105 transition-all group"
+            className="glass p-2.5 sm:p-3 rounded-2xl pointer-events-auto text-white shadow-2xl flex items-center gap-2 border border-white/20 hover:scale-105 transition-all group shrink-0"
+            style={{ alignSelf: 'flex-start' }}
             title="Expand Panel Controls"
           >
-            <Menu className="w-5 h-5 text-indigo-400 group-hover:rotate-90 transition-all" />
+            <Menu className="w-4 h-4 text-indigo-400 group-hover:rotate-90 transition-all" />
             <span className="text-xs font-black uppercase tracking-wider pr-1">Controls</span>
           </motion.button>
         ) : (
           /* EXPANDED SIDEBAR PANEL */
           <motion.div 
-            initial={{ y: 50, opacity: 0 }}
+            initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="glass w-full sm:w-[420px] max-h-[62vh] sm:max-h-[calc(100vh-120px)] rounded-3xl pointer-events-auto flex flex-col overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.85)] border border-white/15"
+            className="glass-panel w-full h-full rounded-3xl pointer-events-auto flex flex-col overflow-hidden shadow-2xl"
           >
             {/* Tabs Navigation Header & Minimize Control */}
-            <div className="flex items-center justify-between p-2 sm:p-2.5 border-b border-white/10 bg-black/30">
+            <div className="flex items-center justify-between p-2 sm:p-2.5 border-b border-white/10 bg-black/40 shrink-0">
               <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1 pr-2">
                 {[
                   { id: 'connect', label: '🔗 Connect' },
@@ -678,7 +691,7 @@ function App() {
                         border: isActive ? '1px solid rgba(129, 140, 248, 0.6)' : '1px solid transparent',
                         color: isActive ? '#fff' : '#94a3b8'
                       }}
-                      className="py-1.5 sm:py-2 px-2.5 sm:px-3 text-[11px] sm:text-xs font-extrabold uppercase tracking-wider transition-all rounded-xl whitespace-nowrap shrink-0"
+                      className="py-1.5 px-2.5 text-[11px] font-extrabold uppercase tracking-wider transition-all rounded-xl whitespace-nowrap shrink-0"
                     >
                       {tab.label}
                     </button>
@@ -698,20 +711,20 @@ function App() {
             </div>
 
             {/* Panel Content (Scrollable) */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5 scrollbar-thin">
+            <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-4 scrollbar-thin">
               
               {/* 1. CONNECT TAB CONTENT */}
               {activeTab === 'connect' && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                   
                   {/* Connected People Section */}
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     <div className="flex justify-between items-center">
                       <div>
                         <h3 className="text-xs uppercase font-extrabold tracking-widest text-indigo-400">
                           Connected People ({people.length})
                         </h3>
-                        <p className="text-[11px] text-slate-400">
+                        <p className="text-[10px] text-slate-400">
                           {people.length >= 3 ? `Convex Hull Polygon Active (${hullPoints.length} Vertices)` : 'Add 3+ people to form boundary'}
                         </p>
                       </div>
@@ -723,7 +736,7 @@ function App() {
                           setEditingPerson(null);
                           setIsAddModalOpen(true);
                         }}
-                        className="px-3 py-1.5 bg-indigo-500/30 border border-indigo-400/40 text-indigo-200 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shrink-0"
+                        className="btn-pill-action"
                       >
                         <UserPlus className="w-3.5 h-3.5" />
                         <span>+ Add Person</span>
@@ -735,7 +748,7 @@ function App() {
                         <p className="text-xs text-slate-300 font-semibold">No locations added yet</p>
                         <button
                           onClick={() => setIsAddModalOpen(true)}
-                          className="px-4 py-2 bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg"
+                          className="btn-gradient-submit"
                         >
                           Add Your Location
                         </button>
@@ -745,11 +758,11 @@ function App() {
                         {people.map((person) => (
                           <div
                             key={person.id}
-                            className="p-2.5 sm:p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between gap-3 hover:bg-white/10 transition-all"
+                            className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between gap-3 hover:bg-white/10 transition-all"
                           >
                             <div className="flex items-center gap-2.5 overflow-hidden">
-                              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 ${person.isUser ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-400/50' : 'bg-slate-700/50 text-slate-300 border border-slate-600'}`}>
-                                {person.isUser ? <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <MapIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${person.isUser ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-400/50' : 'bg-slate-700/50 text-slate-300 border border-slate-600'}`}>
+                                {person.isUser ? <UserCheck className="w-3.5 h-3.5" /> : <MapIcon className="w-3.5 h-3.5" />}
                               </div>
 
                               <div className="overflow-hidden">
@@ -802,7 +815,7 @@ function App() {
                     </div>
 
                     {/* 9 Category Horizontal Pills */}
-                    <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
+                    <div className="poi-cat-pills-container">
                       {PLACE_CATEGORIES.map((cat) => {
                         const isActive = selectedCategory === cat.id;
                         return (
@@ -813,11 +826,7 @@ function App() {
                               setSelectedCategory(cat.id);
                               handleSearchPlaces(cat.id, customPoiQuery);
                             }}
-                            style={{
-                              backgroundColor: isActive ? 'rgba(99, 102, 241, 0.4)' : 'rgba(255, 255, 255, 0.05)',
-                              border: isActive ? '1px solid rgba(129, 140, 248, 0.6)' : '1px solid rgba(255, 255, 255, 0.1)'
-                            }}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all ${isActive ? 'text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+                            className={`poi-cat-pill ${isActive ? 'active' : ''}`}
                           >
                             <span>{cat.icon}</span>
                             <span>{cat.label}</span>
@@ -841,13 +850,13 @@ function App() {
                           placeholder="Search specific place (Inorbit, PVR, Cafe)..."
                           value={customPoiQuery}
                           onChange={(e) => setCustomPoiQuery(e.target.value)}
-                          className="w-full pl-9 pr-3 py-2 rounded-xl bg-black/50 border border-white/15 text-white text-xs placeholder-slate-400 focus:outline-none focus:border-indigo-400 transition-all"
+                          className="input-dark pl-9 pr-3 py-2"
                         />
                       </div>
                       <button
                         type="submit"
                         disabled={loadingPlaces}
-                        className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-extrabold text-xs rounded-xl shadow-lg hover:opacity-90 disabled:opacity-50 transition-all shrink-0"
+                        className="btn-gradient-submit shrink-0"
                       >
                         Find
                       </button>
@@ -932,7 +941,7 @@ function App() {
                     <button
                       onClick={() => handleSearchPlaces()}
                       disabled={loadingPlaces}
-                      className="w-full py-3 bg-gradient-to-r from-amber-500/20 via-indigo-500/20 to-purple-500/20 border border-amber-500/40 text-amber-200 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-amber-500/30 transition-all"
+                      className="btn-find-best-spot"
                     >
                       <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                       <span>⭐ Find Best Meeting Spot</span>
@@ -1247,7 +1256,7 @@ function App() {
                     <button
                       type="submit"
                       disabled={submittingFeedback}
-                      className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-extrabold text-xs rounded-xl shadow-lg hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
+                      className="btn-gradient-submit w-full py-3 flex items-center justify-center gap-2"
                     >
                       {submittingFeedback ? (
                         <>
